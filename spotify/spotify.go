@@ -13,7 +13,9 @@ const SPOTIFY_TOKEN_URL string = "https://accounts.spotify.com/api/token"
 const REDIRECT_URL string  = "http://localhost:8888/callback"
 
 var state string = "Test"
-var auth = spotify.NewAuthenticator(REDIRECT_URL, spotify.ScopeUserReadPrivate, spotify.ScopeUserModifyPlaybackState)
+var auth = spotify.NewAuthenticator(REDIRECT_URL, spotify.ScopeUserReadPrivate,
+	spotify.ScopeUserModifyPlaybackState,
+	spotify.ScopeUserReadCurrentlyPlaying)
 var client spotify.Client
 
 func NewSpotify(client_id, client_secret, redirect_url string) *spotify.Client {
