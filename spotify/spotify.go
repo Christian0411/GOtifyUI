@@ -8,8 +8,6 @@ import (
 	"net/http"
 )
 
-const SPOTIFY_AUTH_URL string = "https://accounts.spotify.com/authorize"
-const SPOTIFY_TOKEN_URL string = "https://accounts.spotify.com/api/token"
 const REDIRECT_URL string  = "http://localhost:8888/callback"
 
 var state string = "Test"
@@ -47,4 +45,19 @@ func NewSpotify(client_id, client_secret, redirect_url string) *spotify.Client {
 	}
 
 	return &client
+}
+
+type NowPlayingInfo struct {
+	SongName   string
+	ArtistName string
+	TimeLeft   int
+	Playing  bool
+}
+
+func (npi *NowPlayingInfo) RefreshNowPlaying(client *spotify.Client){
+	np, _ := client.PlayerCurrentlyPlaying()
+	npi.Playing = np.Playing
+	npi.SongName = np.Item.Name
+	npi.ArtistName = np.Item.Artists[0].Name
+	npi.TimeLeft = np.Progress
 }
