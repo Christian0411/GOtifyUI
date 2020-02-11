@@ -48,10 +48,11 @@ func NewSpotify(client_id, client_secret, redirect_url string) *spotify.Client {
 }
 
 type NowPlayingInfo struct {
-	SongName   string
-	ArtistName string
-	TimeLeft   int
-	Playing  bool
+	SongName    string
+	ArtistName  string
+	CurrentTime float64
+	SongLength  float64
+	Playing     bool
 }
 
 func (npi *NowPlayingInfo) RefreshNowPlaying(client *spotify.Client){
@@ -59,5 +60,6 @@ func (npi *NowPlayingInfo) RefreshNowPlaying(client *spotify.Client){
 	npi.Playing = np.Playing
 	npi.SongName = np.Item.Name
 	npi.ArtistName = np.Item.Artists[0].Name
-	npi.TimeLeft = np.Progress
+	npi.CurrentTime = (float64(np.Progress) / 1000.0) / 60.0
+	npi.SongLength = (float64(np.Item.SimpleTrack.Duration) / 1000.0) / 60.0
 }

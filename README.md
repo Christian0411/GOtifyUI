@@ -29,13 +29,13 @@ You will be prompted to follow a URL. This is to get the auth token from Spotify
    - Pause with space
    - Play next with right arrow
    - Play previous with left arrow
+   - Auto refresh of Now Playing
+
    
 #### Planned Functionality:
 ##### Playlist
  - Section for Top Tracks playlist from spotify
  - Navigation and selection of track
-##### Auto refresh Now Playing info
- - Refresh the Now Playing Info if a track is changed outside app (via Spotify Web for example)
 ##### Now Playing time left info
  - Bar in the Now Playing pane that displays the time left for the song
 ##### Song search

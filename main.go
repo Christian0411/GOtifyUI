@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"github.com/christian0411/GOtifyUI/spotify"
-	"log"
 	c "github.com/jroimartin/gocui"
+	"github.com/pkg/errors"
+	"log"
 	"math"
 	"os"
+	"time"
 )
 
 const REDIRECT_URL string  = "http://localhost:8888/callback"
@@ -54,13 +55,37 @@ func main() {
 		log.Println("Could not set key binding:", err)
 		return
 	}
-		tw, th := g.Size()
-		lv, err := g.SetView("list", 0, 0, tw, int(math.Min(float64(th), 5.0)))
-		lv.Title = " Shuffle: OFF | Repeat: OFF "
-		fmt.Fprint(lv, formatNowPlaying())
-		err = g.MainLoop()
-		log.Println("Main loop has finished:", err)
+
+	tw, th := g.Size()
+	lv, err := g.SetView("list", 0, 0, tw, int(math.Min(float64(th), 5.0)))
+	lv.Title = " Shuffle: OFF | Repeat: OFF "
+	fmt.Fprint(lv, formatNowPlaying())
+
+	go refreshUpdates(g)
+	err = g.MainLoop()
+	log.Println("Main loop has finished:", err)
+
+
 	}
+
+func refreshUpdates(g *c.Gui) {
+	for {
+		time.Sleep(1 * time.Second)
+		g.Update(func(g *c.Gui) error {
+			out,_ := g.View("list")
+			out.Clear()
+			NowPlayingInfo.RefreshNowPlaying(spotifyClient)
+			if NowPlayingInfo.Playing {
+				out.Title = " Shuffle: OFF | Repeat: OFF "
+			} else {
+				out.Title = " Shuffle: OFF | Repeat: OFF "
+			}
+			fmt.Fprint(out,formatNowPlaying())
+			return nil
+		})
+
+	}
+}
 
 
 func layout(g *c.Gui) error {
@@ -107,7 +132,18 @@ func togglePausePlay(g *c.Gui, v *c.View) error {
 
 func formatNowPlaying() string {
 	NowPlayingInfo.RefreshNowPlaying(spotifyClient)
-	return fmt.Sprintf("\x1b[0;31m" + NowPlayingInfo.SongName + " - " + NowPlayingInfo.ArtistName)
+	currentMinutes, currentSeconds := formatTime(NowPlayingInfo.CurrentTime)
+	totalMinutes, totalSeconds := formatTime(NowPlayingInfo.SongLength)
+	return fmt.Sprintf("\x1b[0;31m %s  - %s \t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t%02d:%02d / %02d:%02d", NowPlayingInfo.SongName, NowPlayingInfo.ArtistName,
+		currentMinutes, currentSeconds,totalMinutes, totalSeconds )
+}
+
+func formatTime(ms float64) (int, int){
+	minutes := int(ms)
+	secondsDecimal := math.Mod(ms, 1)
+	seconds := int(secondsDecimal * 60)
+
+	return minutes, seconds
 }
 
 func quit(g *c.Gui, v *c.View) error  {
