@@ -6,31 +6,35 @@ import (
 	"github.com/zmb3/spotify"
 	"log"
 	"net/http"
+	"regexp"
+	"strings"
 )
 
-const REDIRECT_URL string  = "http://localhost:8888/callback"
-
-var state string = "Test"
-var auth = spotify.NewAuthenticator(REDIRECT_URL, spotify.ScopeUserReadPrivate,
-	spotify.ScopeUserModifyPlaybackState,
-	spotify.ScopeUserReadCurrentlyPlaying)
 var client spotify.Client
 
 func NewSpotify(client_id, client_secret, redirect_url string) *spotify.Client {
+	var auth = spotify.NewAuthenticator(redirect_url, spotify.ScopeUserReadPrivate,
+		spotify.ScopeUserModifyPlaybackState,
+		spotify.ScopeUserReadCurrentlyPlaying)
 
 	auth.SetAuthInfo(client_id, client_secret)
-	url := auth.AuthURL(state)
+	url := auth.AuthURL("Test")
 
 	fmt.Printf("Please visit %s", url)
 
 	spotifyAuthReciever := http.NewServeMux()
 
-	s := http.Server{Addr: ":8888", Handler: spotifyAuthReciever}
+	portRegex, _ := regexp.Compile("\\d{1,5}")
+	port := portRegex.FindAllString(redirect_url, 1)[0]
 
-	spotifyAuthReciever.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
+	uri := strings.Split(redirect_url, port)[1]
+
+	s := http.Server{Addr: ":" + port, Handler: spotifyAuthReciever}
+
+	spotifyAuthReciever.HandleFunc(uri, func(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("\nRequest received")
 		// use the same state string here that you used to generate the URL
-		token, err := auth.Token(state, r)
+		token, err := auth.Token("Test", r)
 		if err != nil {
 			http.Error(w, "Couldn't get token", http.StatusNotFound)
 			return
