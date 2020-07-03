@@ -32,7 +32,6 @@ func NewSpotify(client_id, client_secret, redirect_url string) *spotify.Client {
 	s := http.Server{Addr: ":" + port, Handler: spotifyAuthReciever}
 
 	spotifyAuthReciever.HandleFunc(uri, func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("\nRequest received")
 		// use the same state string here that you used to generate the URL
 		token, err := auth.Token("Test", r)
 		if err != nil {

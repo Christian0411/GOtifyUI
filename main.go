@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/christian0411/GOtifyUI/spotify"
 	c "github.com/jroimartin/gocui"
@@ -11,14 +12,16 @@ import (
 	"log"
 	"math"
 	"os"
+	"strings"
 	"time"
 )
 
-var CLIENT_SECRET string = os.Getenv("SPOTIFY_CLIENT_SECRET")
 
 var Config *ConfigFile
 var spotifyClient *spotify2.Client
 var NowPlayingInfo = spotify.NowPlayingInfo{}
+
+
 
 func main() {
 
@@ -65,46 +68,38 @@ type ConfigFile struct {
 
 func readConfigFile() (ConfigFile, error){
 	var cfg ConfigFile
-	readFile(&cfg)
-	if cfg.Spotify.ClientID == "Fill this out" {
-		log.Fatal("client_id must be filled out in config file")
-		os.Exit(1)
-		return cfg, errors.New("Client ID missing")
+
+	f, err := os.Open("config.yml")
+	defer f.Close()
+
+	if err != nil {
+		createDefaultConfig(&cfg)
+		return cfg, nil
 	}
-	if cfg.Spotify.ClientSecret == "Fill this out" {
-		log.Fatal("client_secret must be filled out in config file")
-		os.Exit(1)
-		return cfg,  errors.New("Client ID missing")
-	}
-	if cfg.Spotify.RedirectUrl == "Fill this out" {
-		log.Fatal("redirect_url must be filled out in config file")
-		os.Exit(1)
-		return cfg, errors.New("Client ID missing")
+	decoder := yaml.NewDecoder(f)
+	err = decoder.Decode(&cfg)
+	if err != nil {
+		log.Fatal("Config file is not yml")
 	}
 	return cfg, nil
 }
 
-func readFile(cfg *ConfigFile) {
-	f, err := os.Open("config.yml")
-	if err != nil {
-		createDefaultConfig()
-		log.Fatal("Config file not found. Creating default. \nPlease fill out before running again")
-	}
-	defer f.Close()
+func createDefaultConfig(cfg *ConfigFile) {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("Beginning first time setup.")
+	fmt.Print("Spotify Client ID: ")
+	in, _ := reader.ReadString('\n')
+	cfg.Spotify.ClientID = strings.Replace(in, "\n", "", -1)
 
-	decoder := yaml.NewDecoder(f)
-	err = decoder.Decode(cfg)
-	if err != nil {
-		log.Fatal("Config file is not yml")
-	}
-}
+	fmt.Print("Spotify Client Secret: ")
+	in, _ = reader.ReadString('\n')
+	cfg.Spotify.ClientSecret = strings.Replace(in, "\n", "", -1)
 
-func createDefaultConfig() {
-	var defaultCfg ConfigFile
-	defaultCfg.Spotify.ClientID = "Fill this out"
-	defaultCfg.Spotify.ClientSecret = "Fill this out"
-	defaultCfg.Spotify.RedirectUrl = "Fill this out"
-	out, _ := yaml.Marshal(defaultCfg)
+	fmt.Print("Redirect URL: ")
+	in, _ = reader.ReadString('\n')
+	cfg.Spotify.RedirectUrl = strings.Replace(in, "\n", "", -1)
+
+	out, _ := yaml.Marshal(cfg)
 	ioutil.WriteFile("config.yml",out,0644)
 }
 
